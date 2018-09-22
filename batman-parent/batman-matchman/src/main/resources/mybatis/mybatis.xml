@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+    PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+       <!-- 分页拦截器 -->
+      <plugins>
+		<plugin interceptor="com.batman.matchman.interceptor.MybatisPageInterceptor">
+		     <!-- 配置使用的数据库方言 -->
+		     <property name="databaseType" value="MYSQL"/>  
+		     <!-- 配置以Page结尾的id方法被拦截 -->
+		     <property name="pageSqlId" value=".*Page$"/>
+		</plugin>
+	</plugins> 
+
+
+</configuration>

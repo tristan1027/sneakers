@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:aop="http://www.springframework.org/schema/aop" 
+	   xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans 
+                           http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+                           http://www.springframework.org/schema/context 
+                           http://www.springframework.org/schema/context/spring-context-4.0.xsd
+                           http://www.springframework.org/schema/aop 
+                           http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+        				   http://www.springframework.org/schema/tx 
+        				   http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+	
+	<!-- spring整合mybatis start -->
+	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close"> 
+	    <!-- 数据源驱动类可不写，Druid默认会自动根据URL识别DriverClass -->
+	    <property name="driverClassName" value="${connection.mysql.driverclassname}" />
+		<property name="url" value="${connection.mysql.url}" />
+		<property name="username" value="${jdbc.mysql.connection.username}" />
+		<property name="password" value="${jdbc.mysql.connection.password}" />
+		
+		<!-- 配置初始化大小、最小、最大 -->
+		<property name="initialSize" value="${druid.jdbc.pool.init}" />
+		<property name="minIdle" value="${druid.jdbc.pool.minIdle}" /> 
+		<property name="maxActive" value="${druid.jdbc.pool.maxActive}" />
+		
+		<!-- 配置获取连接等待超时的时间 -->
+		<property name="maxWait" value="60000" />
+		
+		<!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+		<property name="timeBetweenEvictionRunsMillis" value="60000" />
+		
+		<!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+		<property name="minEvictableIdleTimeMillis" value="300000" />
+		
+		<property name="validationQuery" value="${druid.jdbc.testSql}" />
+		<property name="testWhileIdle" value="true" />
+		<property name="testOnBorrow" value="false" />
+		<property name="testOnReturn" value="false" />
+		
+		<!-- 配置监控统计拦截的filters -->
+	    <property name="filters" value="stat" /> 
+	    <property name="connectionInitSqls" value="set names utf8mb4;"/>
+	</bean>
+
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="mapperLocations" value="classpath*:mapper/*.xml" />
+		<property name="typeAliasesPackage" value="com.batman.common.entity"/>
+		 <!-- 加载 mybatis配置文件可省去，但是我们系统自定义了mybatis的分页拦截器     -->
+        <property name="configLocation" value="classpath:mybatis/mybatis.xml" />  
+	</bean>
+
+	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate" scope="prototype">
+  		<constructor-arg index="0" ref="sqlSessionFactory" />
+	</bean>
+	
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+	    <property name="basePackage" value="com.batman.user.dao"/>
+	    <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+	</bean>
+	<!-- spring整合mybatis end -->
+	
+	<!-- spring 事务 start -->
+	<bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	
+	<!-- propagation="REQUIRED"  rollback-for="java.lang.Exception" 对事务的管理至关重要！ -->
+	<tx:advice id="txAdvice" transaction-manager="txManager">
+	
+	<tx:attributes>
+		<tx:method name="save*" propagation="REQUIRED"  rollback-for="java.lang.Exception"/>
+		<tx:method name="add*" propagation="REQUIRED" rollback-for="java.lang.Exception" />
+		<tx:method name="create*" propagation="REQUIRED" rollback-for="java.lang.Exception"/>
+		<tx:method name="cancel*" propagation="REQUIRED" rollback-for="java.lang.Exception"/>
+		<tx:method name="update*" propagation="REQUIRED" rollback-for="java.lang.Exception"/>
+		<tx:method name="merge*" propagation="REQUIRED" rollback-for="java.lang.Exception" />
+		<tx:method name="del*" propagation="REQUIRED" rollback-for="java.lang.Exception" />
+		<tx:method name="pay*" propagation="REQUIRED" rollback-for="java.lang.Exception"/>
+		<tx:method name="finish*" propagation="REQUIRED" rollback-for="java.lang.Exception"/>
+		<tx:method name="comment*" propagation="REQUIRED"  rollback-for="java.lang.Exception"/>
+		<tx:method name="bind*" propagation="REQUIRED"  rollback-for="java.lang.Exception"/>
+	    <tx:method name="insert*" propagation="REQUIRED"  rollback-for="java.lang.Exception"/>
+	    <tx:method name="checkAmount" propagation="REQUIRED"  rollback-for="java.lang.Exception"/>
+	    <tx:method name="sendSysNotice" propagation="REQUIRED"  rollback-for="java.lang.Exception"/>
+	    <!-- <tx:method name="isFriend" propagation="REQUIRED"  rollback-for="java.lang.Exception"/>
+		<tx:method name="judegFriend" propagation="REQUIRED"  rollback-for="java.lang.Exception"/> -->
+		
+		
+		<tx:method name="get*" propagation="REQUIRED" read-only="true" />
+		<tx:method name="count*" propagation="REQUIRED" read-only="true" />
+		<tx:method name="find*" propagation="REQUIRED" read-only="true" />
+		<tx:method name="list*" propagation="REQUIRED" read-only="true" />
+	</tx:attributes>
+	</tx:advice>
+	
+	<aop:config expose-proxy="true">
+		<aop:pointcut id="txPointcut" expression="execution(* com.batman.matchman.service..*.*(..))" />
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="txPointcut" />
+	</aop:config>
+	<aop:aspectj-autoproxy />
+	<!-- spring 事务 end -->
+</beans>

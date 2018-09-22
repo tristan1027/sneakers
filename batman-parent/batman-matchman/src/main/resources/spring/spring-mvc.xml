@@ -1,0 +1,90 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context-4.0.xsd
+       http://www.springframework.org/schema/mvc
+       http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+       http://www.springframework.org/schema/task 
+       http://www.springframework.org/schema/task/spring-task.xsd">
+
+	<description>Spring MVC的配置文件</description>
+
+	<task:annotation-driven/>
+
+	<context:component-scan base-package="com.batman.matchman" />
+	<!-- <mvc:annotation-driven /> -->
+	<mvc:annotation-driven>
+		<mvc:message-converters register-defaults="false">
+			<ref bean="fastJsonHttpMessageConverter" />
+		</mvc:message-converters>
+	</mvc:annotation-driven>
+
+	<!-- 将静态资源交给默认的容器进行处理 -->
+	<mvc:default-servlet-handler />
+	
+
+	<!-- fastJson 处理默认值和空以及数字等 -->
+	<bean id="fastJsonHttpMessageConverter"
+		class="com.batman.matchman.utils.IronmanMessageConverter">
+		<property name="supportedMediaTypes">
+			<list>
+				<!-- <value>text/json;charset=UTF-8</value> -->
+				<!-- <value>text/html;charset=UTF-8</value> -->
+				<value>application/json;charset=UTF-8</value> 
+			</list>
+		</property>
+		<property name="features">
+			<list>
+				<value>WriteMapNullValue</value>
+				<value>WriteNullNumberAsZero</value>
+				<value>WriteNullListAsEmpty</value>
+				<value>WriteNullStringAsEmpty</value>
+				<value>WriteNullBooleanAsFalse</value>
+			</list>
+		</property>
+		<property name="defaultDateFormat" value="yyyy-MM-dd'T'HH:mm:ss+08"></property> 
+	</bean>
+
+	<!-- 上传文件用的 -->
+	<bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+
+		<property name="defaultEncoding" value="utf-8" />
+
+		<property name="maxUploadSize" value="10485760" />
+
+		<property name="maxInMemorySize" value="40960" />
+	</bean>
+
+
+	<bean
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="contentType" value="text/html;charset=utf-8" />
+		<property name="prefix" value="/WEB-INF/views" />
+		<property name="suffix" value=".jsp" />
+		<property name="viewClass"
+			value="org.springframework.web.servlet.view.JstlView" />
+	</bean>
+
+	<!-- 拦截器 -->
+	<mvc:interceptors>
+		<!-- 登录拦截器 -->
+		<mvc:interceptor>
+			<mvc:mapping path="/**/isLogin/**" />
+			<bean class="com.batman.matchman.interceptor.LoginInterceptor"></bean>
+		</mvc:interceptor>
+		<!--分页拦截器 拦截路径中包含page的请求路径 -->
+
+		<mvc:interceptor>
+			<mvc:mapping path="/**/page/**" />
+			<bean class="com.batman.matchman.interceptor.FrontMvcInterceptor"></bean>
+		</mvc:interceptor>
+
+	</mvc:interceptors>
+</beans>

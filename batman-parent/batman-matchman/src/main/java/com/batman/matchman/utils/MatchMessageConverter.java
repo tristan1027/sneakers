@@ -12,7 +12,7 @@ import com.alibaba.fastjson.serializer.SimpleDateFormatSerializer;
 import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
 
 
-public class IronmanMessageConverter extends FastJsonHttpMessageConverter {
+public class MatchMessageConverter extends FastJsonHttpMessageConverter {
 
 	public static SerializeConfig mapping = new SerializeConfig();
 

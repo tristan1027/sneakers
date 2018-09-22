@@ -31,7 +31,7 @@
 
 	<!-- fastJson 处理默认值和空以及数字等 -->
 	<bean id="fastJsonHttpMessageConverter"
-		class="com.batman.matchman.utils.IronmanMessageConverter">
+		class="com.batman.matchman.utils.MatchMessageConverter">
 		<property name="supportedMediaTypes">
 			<list>
 				<!-- <value>text/json;charset=UTF-8</value> -->
@@ -77,13 +77,13 @@
 		<!-- 登录拦截器 -->
 		<mvc:interceptor>
 			<mvc:mapping path="/**/isLogin/**" />
-			<bean class="com.batman.matchman.interceptor.LoginInterceptor"></bean>
+			<bean class="com.batman.matchman.intercptor.LoginInterceptor"></bean>
 		</mvc:interceptor>
 		<!--分页拦截器 拦截路径中包含page的请求路径 -->
 
 		<mvc:interceptor>
 			<mvc:mapping path="/**/page/**" />
-			<bean class="com.batman.matchman.interceptor.FrontMvcInterceptor"></bean>
+			<bean class="com.batman.matchman.intercptor.FrontMvcInterceptor"></bean>
 		</mvc:interceptor>
 
 	</mvc:interceptors>

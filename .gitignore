@@ -31,7 +31,7 @@ bin/
 project.properties
 
 Servers/
-batman-matchman/logs/
+batman-matchman/logs/*
 jdbc.properties
 redis.properties
 .idea

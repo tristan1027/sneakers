@@ -6,9 +6,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.batman.common.utils.ResponseData;
 import com.batman.matchman.utils.HttpData;
 import com.batman.matchman.utils.HttpService;
 import com.batman.matchman.utils.HttpUtil;
@@ -44,11 +44,12 @@ public class NikeTestTemp {
 		String url = "https://api.nike.com/measure/uxevents/v1";
 
 		try {
-			String response=HttpUtil.doPostSSL(url, heads, paramsStr);
+			ResponseData response=HttpUtil.doPostSSL(url, heads, paramsStr);
+			System.out.println("V1返回:"+JSONObject.toJSONString(response));
 			
 			//注释
-			String content = doCart();
-			System.out.println("接口返回内容:"+response);
+			String content = doCart(response.getCookieString());
+			System.out.println("加入购物车接口返回内容:"+content);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -77,9 +78,9 @@ public class NikeTestTemp {
 
 	}
 	
-	private static String doCart() {
+	private static String doCart(String cookiev) {
 		String cookie="AnalysisUserId=182.132.32.100.187011537575840387; guidU=822538e5-a544-4f0e-9640-c2084b126380; neo.swimlane=97; cicPWIntercept=1; RES_TRACKINGID=321724964001461; ResonanceSegment=1; _gscu_207448657=37575851pxghv317; anonymousId=1C7B5852FD89B0B89361EE7161FFF12E; _smt_uid=5ba58bab.5188f37e; ajs_user_id=null; ajs_group_id=null; ajs_anonymous_id=%221C7B5852FD89B0B89361EE7161FFF12E%22; CONSUMERCHOICE_SESSION=t; CONSUMERCHOICE=cn/zh_cn; siteCatalyst_sample=82; dreamcatcher_sample=49; neo_sample=35; lls=3; slCheck=6Nawg9wgt8is/vTl+JTHMOw8MO+U1am1IYeJjivPku2PnLg1TvUM94KEtKdVlaTrDY86IJvNPWm0rKWFsAHTzT8DXMiSBy0+TVxayZuVw7x2vC1bZ7qb2Kz22Sgfj8YL; llCheck=tZnJV5iwvrd1lF8qI/pyBWa2DnWdT61smE+iRRD9K705QgS7CaMDyjAXdkAnPVZFEFVUBdY+UMUH9o9EW/+Qq1OtCvivdHJBBCA8jvQtWEU18vA+/nF+X3MrNf2QmalPv+G/LaejqS6eT2uPhxfes21MP7sHwcrzsYKewkFz/TA=; nike_cp=cnns_sz_071516_a_alnul_bz01; neo.experiments=%7B%22main%22%3A%7B%223333-interceptor-cn%22%3A%22a%22%2C%223698-interceptor%22%3A%22a%22%7D%2C%22snkrs%22%3A%7B%7D%2C%22ocp%22%3A%7B%7D%7D; dreams_sample=18; AMCVS_F0935E09512D2C270A490D4D%40AdobeOrg=1; _gscbrs_207448657=1; sls=1; exp.swoosh.user=%7B%22granted%22%3A0%7D; guidA=642084b60d4900003d96a85b7d000000a4280000; geoloc=cc=CN,rc=SC,tp=vhigh,tz=GMT+8,la=30.67,lo=104.07,bw=5000; _qzjc=1; Hm_lvt_ed406c6497cc3917d06fd572612b4bba=1537615905,1537626827,1537775181; NIKE_COMMERCE_COUNTRY=CN; NIKE_COMMERCE_LANG_LOCALE=zh_CN; APID=BF7B927D651B8B0909BBEFCBB7A71A8D.sin-341-app-ap-0; RES_SESSIONID=644462663359338; mm_wc_pmt=1; guidS=451f361d-74b8-45d2-ed6c-fc1ce6f399b7; DAPROPS=\"sdevicePixelRatio:1.25|sdeviceAspectRatio:16/9|bcookieSupport:1\"; CART_SUMMARY=%7B%22profileId%22+%3A%2218261271308%22%2C%22userType%22+%3A%22DEFAULT_USER%22%2C%22securityStatus%22+%3A%221%22%2C%22cartCount%22+%3A1%7D; utag_main=_st:1537893429613$ses_id:1537892232340%3Bexp-session; guidSTimestamp=1537891606767|1537891630113; Hm_lpvt_ed406c6497cc3917d06fd572612b4bba=1537891630; _qzja=1.267957700.1537615905145.1537802093490.1537891607203.1537891630493.1537891630503..0.0.31.7; _qzjb=1.1537891607202.7.0.0.0; _qzjto=7.1.0; s_pers=%20s_dfa%3Dnikecomprod%7C1537893429958%3B%20c58%3Dno%2520value%7C1537893432466%3B; s_sess=%20c51%3Dhorizontal%3B%20s_cc%3Dtrue%3B%20prevList2%3D%3B%20tp%3D1756%3B%20s_ppv%3Dnikecom%25253Ecart%25253Eview%252C46%252C46%252C806%3B; AKA_A2=A;  ak_bmsc=437F0C6A536114111C03514F9B335EBBB68420640D490000245DAA5B46D5D069~plfnga83yyW3HbOnp9tvw8NmvC2uh+3VEcCdusQ2drz9bp8VHyeE7An8X1UcfpaJQ/UJjnGBTIeoVjqwqV7xFQ14YAAvhD1bBLMOfmG9djIr92dQI3cXPGl2HQi4IwbGnzSmhjLH4jdMo+TCNaCZtx8fIsnc92C4AvD3S90nv206nqv26+d8MwIqspEKDtHRn2XecsNEJQcuZLBRi1sR4NkWDSXlxrJ30ecB2eHu2QmZZZLahO46GnmMFM9KeU0oif; RT=\"sl=5&ss=1537891602874&tt=13857&obo=2&sh=1537891639370%3D5%3A2%3A13857%2C1537891630735%3D4%3A2%3A7023%2C1537891618035%3D3%3A2%3A2868%2C1537891615041%3D2%3A2%3A0%2C1537891614884%3D1%3A1%3A0&dm=nike.com&si=a19c0444-f491-4d70-bfcc-cf4ee120777c&bcn=%2F%2F36fb78d7.akstat.io%2F&ld=1537891639371\"; ppd=pdp|nikecom>pdp>Air%20Jordan%201%20Mid%20%E7%94%B7%E5%AD%90%E8%BF%90%E5%8A%A8%E9%9E%8B; AMCV_F0935E09512D2C270A490D4D%40AdobeOrg=-1891778711%7CMCIDTS%7C17799%7CMCMID%7C76542376286062809363725693145865169681%7CMCAAMLH-1538496439%7C11%7CMCAAMB-1538496439%7CRKhpRz8krg2tLO6pguXWp5olkAcUniQYPHaMWWgdJ3xzPWQmdj0y%7CMCOPTOUT-1537898839s%7CNONE%7CMCSYNCSOP%7C411-17804%7CMCAID%7CNONE%7CvVersion%7C2.4.0; _gscs_207448657=t37891607vz0zq110|pv:5; bm_sv=51312864E32CBACE991718034BCD3DB8~yX9vulQz81gWoCFUSEvP32HEr5aY37vQaVxyBtC64bpUCQCEnLZA2Hs1aABAZbClzuJ0pt57KdSlv/fZGcvwZ6jXFqG1/Z8AVVtABsp9N1oiR2Pom9AOu2eYh1bfprnVumGwqRclWOHlJaGTHlJIYw==";
-		String cookiev="_abck=1C0E04DA2203EA52C7D6356A1BA8622F7D38DA2CC61A00003F5EAA5B4211E453~-1~Rm4fhy1jjdDQCdtQabqfdyZMpTofzrqJqz1TXSOuMMI=~-1~-1;bm_sz=F9AB1277C40E6D255FB9B94E36D81BAB~QAAQLNo4faJTbwlmAQAAXieAEZiNZvtrAOo+dcVBzkC5nOqca9FHNmuxEdefxDhd6owkOD9+rY35aDIUw2AySK2TflxLAy/5OvR3b8vTuQmVfcEnVDbjchKuL8zLP+CxY8TsHgH5BhDW7Cgk3ZL05xAjClofFLVp28EXZHuexxZfnI4/oCzxPlo0cArv;";
+//		String cookiev="_abck=1C0E04DA2203EA52C7D6356A1BA8622F7D38DA2CC61A00003F5EAA5B4211E453~-1~Rm4fhy1jjdDQCdtQabqfdyZMpTofzrqJqz1TXSOuMMI=~-1~-1;bm_sz=F9AB1277C40E6D255FB9B94E36D81BAB~QAAQLNo4faJTbwlmAQAAXieAEZiNZvtrAOo+dcVBzkC5nOqca9FHNmuxEdefxDhd6owkOD9+rY35aDIUw2AySK2TflxLAy/5OvR3b8vTuQmVfcEnVDbjchKuL8zLP+CxY8TsHgH5BhDW7Cgk3ZL05xAjClofFLVp28EXZHuexxZfnI4/oCzxPlo0cArv;";
 		cookie = cookie + cookiev;
 		System.out.println("cookie:" + cookie);
 		Map<String, String> params = new HashMap<String, String>();

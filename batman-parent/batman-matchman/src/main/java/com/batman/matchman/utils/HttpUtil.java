@@ -19,7 +19,9 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -28,7 +30,9 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLContextBuilder;
 import org.apache.http.conn.ssl.TrustStrategy;
+import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -37,7 +41,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 
-import com.alibaba.fastjson.JSONObject;
+import com.batman.common.utils.ResponseData;
 
 @SuppressWarnings("deprecation")
 public class HttpUtil  {
@@ -61,7 +65,8 @@ public class HttpUtil  {
 	        // 设置从连接池获取连接实例的超时  
 	        configBuilder.setConnectionRequestTimeout(MAX_TIMEOUT);  
 	        // 在提交请求之前 测试连接是否可用  
-	        configBuilder.setStaleConnectionCheckEnabled(false);  
+	        configBuilder.setStaleConnectionCheckEnabled(false); 
+	        configBuilder.setCookieSpec(CookieSpecs.STANDARD);
 	        requestConfig = configBuilder.build();  
 	    }  
 	  
@@ -242,8 +247,11 @@ public class HttpUtil  {
 	     * @param json JSON对象 
 	     * @return 
 	     */  
-	    public static String doPostSSL(String apiUrl,Map<String, String> header, String json) {  
-	        CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(createSSLConnSocketFactory()).setConnectionManager(connMgr).setDefaultRequestConfig(requestConfig).build();  
+	    public static ResponseData doPostSSL(String apiUrl,Map<String, String> header, String json) {  
+	    	ResponseData data=new ResponseData();
+	    	CookieStore basicCookieStore=new BasicCookieStore();
+	        CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(createSSLConnSocketFactory()).setConnectionManager(connMgr).setDefaultRequestConfig(requestConfig)
+	        		.setDefaultCookieStore(basicCookieStore).build();  
 	        HttpPost httpPost = new HttpPost(apiUrl);  
 	        CloseableHttpResponse response = null;  
 	        String httpStr = null;  
@@ -261,6 +269,14 @@ public class HttpUtil  {
 	            stringEntity.setContentType("application/json");  
 	            httpPost.setEntity(stringEntity);  
 	            response = httpClient.execute(httpPost);  
+		    		String tmpcookies = "";
+		    		List<Cookie> cookieList = basicCookieStore.getCookies();
+		    		for (int i = 0; i < cookieList.size(); i++) {
+		    			Cookie cookie = (Cookie) cookieList.get(i);
+	
+		    			tmpcookies = tmpcookies + cookie.getName() + "=" + cookie.getValue() + ";";
+		    		}
+	            
 	            int statusCode = response.getStatusLine().getStatusCode();  
 	            if (statusCode != HttpStatus.SC_OK) {  
 	                return null;  
@@ -270,6 +286,8 @@ public class HttpUtil  {
 	                return null;  
 	            }  
 	            httpStr = EntityUtils.toString(entity, "utf-8");  
+	            data.setCookieString(tmpcookies);
+	            data.setResponseString(httpStr);
 	        } catch (Exception e) {  
 	        	logger.error("163httpUtil异常",e);
 	        } finally {  
@@ -281,7 +299,7 @@ public class HttpUtil  {
 	                }  
 	            }  
 	        }  
-	        return httpStr;  
+	        return data;  
 	    }  
 	  
 	    /** 

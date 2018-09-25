@@ -374,6 +374,9 @@ public class HttpHandle {
 			HttpData httpData = new HttpData(bytes, charset, url);
 			httpData.setHeaders(headers);
 			return httpData;
+		}else if(status==500){
+			LOG.error("目标服务器报错,我也是醉了");
+			
 		}
 		return null;
 	}

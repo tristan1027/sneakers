@@ -11,6 +11,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.batman.matchman.utils.HttpData;
 import com.batman.matchman.utils.HttpService;
+import com.batman.matchman.utils.HttpUtil;
 import com.google.gson.Gson;
 
 public class NikeTestTemp {
@@ -37,22 +38,14 @@ public class NikeTestTemp {
 				"https://www.nike.com/cn/t/air-jordan-1-mid-%E7%94%B7%E5%AD%90%E8%BF%90%E5%8A%A8%E9%9E%8B-eoTVomwM/554724-104");
 		heads.put("user-agent",
 				"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.84 Safari/537.36");
-		System.out.println("数据源:" + paramsStr);
-		HashMap<String, Object> paramObj=JSONObject.parseObject(paramsStr, HashMap.class);
-		System.out.println("第一次读取"+JSON.toJSONString(paramObj));
-		
-		Map<String, String> param = objToString(paramObj);
+		System.out.println("数据源:" + paramsStr.toString());
 		
 
-		HttpService httpServicev = new HttpService();
 		String url = "https://api.nike.com/measure/uxevents/v1";
 
 		try {
-			HttpData httpData = httpServicev.postWithHeads(url, param, heads);
-			String cookiev = httpServicev.getCookies();
-			System.out.println("return cookie:" + cookiev);
-			String htmlContent = httpData.getContentStr();
-			System.out.println("return httpdata:" + htmlContent);
+			String response=HttpUtil.doPostSSL(url, heads, paramsStr);
+			System.out.println("接口返回内容:"+response);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -77,7 +70,6 @@ public class NikeTestTemp {
 			}
 
 		}
-		System.out.println("转换string之后:" + JSONObject.toJSONString(postMap));
 		return postMap;
 
 	}

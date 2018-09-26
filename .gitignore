@@ -31,7 +31,7 @@ bin/
 project.properties
 
 Servers/
-batman-matchman/logs/*
+batman-parent/batman-matchman/logs/sneakers.log.*
 jdbc.properties
 redis.properties
 .idea

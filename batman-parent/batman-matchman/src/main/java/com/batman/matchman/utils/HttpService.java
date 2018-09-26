@@ -15,6 +15,12 @@ public class HttpService {
 	public HttpService() {
 		this(false, null, null, true, null, 0, 0, 60000);
 	}
+	/**
+	 * @param https
+	 */
+	public HttpService(boolean isHttps) {
+		this(true, null, null, true, null, 0, 0, 60000);
+	}
 
 	public HttpService(Map<String, String> headers) {
 		this(false, null, null, true, headers, 0, 0, 60000);
@@ -125,11 +131,38 @@ public class HttpService {
 			Map<String, String> heads) {
 		return post(url, params, host, port, heads, null, true);
 	}
+	
+	/**
+	 * @param url
+	 * @param jsonString
+	 * @param heads
+	 * @return
+	 */
+	public HttpData postJsonWithHeads(String url, String jsonString, Map<String, String> heads) {
+		return post(url, jsonString, null, -1, heads, null, true);
+	}
 
 	public HttpData post(String url, Map<String, String> params, String host, int port, Map<String, String> heads,
 			String charset, boolean specialEncode) {
 		try {
 			return httpHandle.post(url, params, host, port, heads, charset, specialEncode);
+		} catch (ClientProtocolException e) {
+			e.printStackTrace();
+			LOG.error(url);
+			LOG.error(e.getMessage(), e);
+			return null;
+		} catch (IOException e) {
+			e.printStackTrace();
+			LOG.error(url);
+			LOG.error(e.getMessage(), e);
+		}
+		return null;
+	}
+	
+	public HttpData post(String url, String jsonString, String host, int port, Map<String, String> heads,
+			String charset, boolean specialEncode) {
+		try {
+			return httpHandle.postJson(url, jsonString, host, port, heads, charset, specialEncode);
 		} catch (ClientProtocolException e) {
 			e.printStackTrace();
 			LOG.error(url);

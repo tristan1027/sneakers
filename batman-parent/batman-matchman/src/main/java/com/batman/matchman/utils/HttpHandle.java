@@ -1,9 +1,5 @@
 package com.batman.matchman.utils;
 
-import com.ipscg.framework.util.DomainUtil;
-import com.ipscg.framework.util.http.Encoding;
-import com.ipscg.framework.util.http.SinoDetect;
-
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,7 +17,9 @@ import java.util.Random;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.net.ssl.SSLContext;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.Consts;
@@ -30,19 +28,18 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.config.RequestConfig.Builder;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.cookie.Cookie;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
@@ -50,6 +47,10 @@ import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.TrustStrategy;
 import org.apache.http.util.Args;
 import org.apache.http.util.ByteArrayBuffer;
+
+import com.ipscg.framework.util.DomainUtil;
+import com.ipscg.framework.util.http.Encoding;
+import com.ipscg.framework.util.http.SinoDetect;
 
 public class HttpHandle {
 	private static final Log LOG = LogFactory.getLog(HttpHandle.class);
@@ -131,6 +132,8 @@ public class HttpHandle {
 					.setDefaultRequestConfig(config).setDefaultCookieStore(basicCookieStore).build();
 		}
 	}
+	
+	
 
 	public HttpHandle(boolean isHttps, String digitalCertificatePath, String digitalCertificatePsw, boolean needDelay,
 			int minDelayTime, int maxDelayTime, int connectTimeout) {
@@ -381,6 +384,68 @@ public class HttpHandle {
 		return null;
 	}
 
+	public HttpData postJson(String url, String json, String host, int port, Map<String, String> heads,
+			String charset, boolean specialEncode) throws ClientProtocolException, IOException {
+		url = encodeURL(url, charset);
+		if (specialEncode) {
+			url = encode(url, charset);
+		}
+        HttpPost request = new HttpPost(url);  
+
+		if (null != heads) {
+			Set<String> keySet = heads.keySet();
+			for (String key : keySet) {
+				request.addHeader(key, (String) heads.get(key));
+			}
+		}
+        StringEntity stringEntity = new StringEntity(json,"UTF-8");//解决中文乱码问题  
+        stringEntity.setContentEncoding("UTF-8");  
+        stringEntity.setContentType("application/json");  
+        request.setEntity(stringEntity);
+		HttpResponse response = httpClient.execute(request);
+		
+		Header[] headers = response.getAllHeaders();
+		int status = response.getStatusLine().getStatusCode();
+		if ((status == 302) || (status == 301) || (status == 303) || (status == 307)) {
+			Header header = response.getFirstHeader("location");
+			if (header != null) {
+				String movedUrl = DomainUtil.getAbsoluteURL(header.getValue(), url);
+
+				request.releaseConnection();
+				return get(movedUrl, host, port, heads, charset, true, specialEncode, 1);
+			}
+			return null;
+		}
+		if (status == 200) {
+			HttpEntity entity = response.getEntity();
+			byte[] bytes = null;
+			try {
+				bytes = entity != null ? toByteArray(entity) : null;
+			} catch (Exception e) {
+				LOG.error(e.getMessage(), e);
+				e.printStackTrace();
+			}
+			if (charset == null) {
+				if (bytes == null) {
+					charset = "utf-8";
+				} else {
+					charset = Encoding.htmlname[sinoDetect.detectEncoding(bytes)];
+				}
+			}
+			request.releaseConnection();
+			if (bytes == null) {
+				return null;
+			}
+			HttpData httpData = new HttpData(bytes, charset, url);
+			httpData.setHeaders(headers);
+			return httpData;
+		}else if(status==500){
+			LOG.error("目标服务器报错,我也是醉了");
+			
+		}
+		return null;
+	}
+	
 	private HttpPost postForm(String url, Map<String, String> params, String charset) {
 		HttpPost httPost = new HttpPost(url);
 
@@ -420,7 +485,7 @@ public class HttpHandle {
 
 			RequestConfig config = RequestConfig.custom().setSocketTimeout(connectTimeout)
 					.setConnectTimeout(connectTimeout).setConnectionRequestTimeout(connectTimeout)
-					.setRedirectsEnabled(false).build();
+					.setRedirectsEnabled(false).setCookieSpec(CookieSpecs.STANDARD).build();
 			basicCookieStore = new BasicCookieStore();
 
 			return HttpClients.custom()
